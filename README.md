@@ -1,0 +1,26 @@
+# Docker-compose.yml
+
+version: "3"
+
+services:
+  wordpress:
+    image: wordpress
+    links:
+      - wordpress_db
+    ports:
+      - "8282:80"
+
+  wordpress_db:
+    image: mariadb
+    environment:
+      - MY_SQL_ROOT_PASSWORD=parvez
+
+  phpmyadmin:
+    image: corbinu/docker-phpmyadmin
+    links:
+      - wordpress_db:mysql
+    ports:
+      - "8181:80"
+    environment:
+      - MY_SQL_USERNAME=root
+      - MY_SQL_ROOT_PASSWORD=parvez   
