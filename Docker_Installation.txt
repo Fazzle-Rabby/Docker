@@ -1,0 +1,175 @@
+*** How To Install and Use Docker on Ubuntu 20.04
+
+
+*** Prerequisites
+
+- One Ubuntu 20.04 server set up by following the Ubuntu 20.04 initial server setup guide, including a sudo   non-root user and a firewall
+- An account on Docker Hub if you wish to create your own images and push them to Docker Hub, as shown in Steps 7 and 8
+
+
+*** Step 1 — Installing Docker
+
+- First, update your existing list of packages
+$ sudo apt update
+
+- Next, install a few prerequisite packages which let apt use packages over HTTPS
+$ sudo apt install apt-transport-https ca-certificates curl software-properties-common
+
+- Then add the GPG key for the official Docker repository to your system
+$ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+
+- Add the Docker repository to APT sources
+$ sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
+
+- Next, update the package database with the Docker packages from the newly added repo
+$ sudo apt update
+
+- Make sure you are about to install from the Docker repo instead of the default Ubuntu repo
+$ apt-cache policy docker-ce
+
+- You’ll see output like this, although the version number for Docker may be different
+docker-ce:
+  Installed: (none)
+  Candidate: 5:19.03.9~3-0~ubuntu-focal
+  Version table:
+     5:19.03.9~3-0~ubuntu-focal 500
+        500 https://download.docker.com/linux/ubuntu focal/stable amd64 Packages
+
+- Finally, install Docker
+$ sudo apt install docker-ce
+$ docker --version
+$ sudo systemctl enable --now docker
+$ sudo systemctl status docker
+press q
+
+
+
+*** Step 2 — Executing the Docker Command Without Sudo (Optional)
+
+- If you want to avoid typing sudo whenever you run the docker command, add your username to the docker group
+$ sudo usermod -aG docker ${USER}
+
+- To apply the new group membership, log out of the server and back in, or type the following
+$ su - ${USER}
+You will be prompted to enter your user’s password to continue.
+
+- Confirm that your user is now added to the docker group by typing
+$ id -nG
+
+- If you need to add a user to the docker group that you’re not logged in as, declare that username explicitly using
+$ sudo usermod -aG docker username
+
+
+*** Step 3 — Using the Docker Command
+
+- Using docker consists of passing it a chain of options and commands followed by arguments. The syntax takes this form
+$ docker [option] [command] [arguments]
+
+- To view all available subcommands, type
+$ docker
+
+- To view the options available to a specific command, type
+$ docker docker-subcommand --help
+
+- To view system-wide information about Docker, use
+$ docker info
+
+
+*** Step 4 — Working with Docker Images
+
+- Docker containers are built from Docker images. By default, Docker pulls these images from Docker Hub, a Docker registry managed by Docker, the company behind the Docker project. Anyone can host their Docker images on Docker Hub, so most applications and Linux distributions you’ll need will have images hosted there.
+
+- To check whether you can access and download images from Docker Hub, type
+$ docker run hello-world
+
+- You can search for images available on Docker Hub by using the docker command with the search subcommand. For example, to search for the Ubuntu image, type
+$ docker search ubuntu
+
+- Execute the following command to download the official ubuntu image to your computer
+$ docker pull ubuntu
+
+- To see the images that have been downloaded to your computer, type
+$ docker images
+
+
+*** Step 5 — Running a Docker Container
+
+- As an example, let’s run a container using the latest image of Ubuntu. The combination of the -i and -t switches gives you interactive shell access into the container
+$ docker run -it ubuntu
+[root@d9b100f2f636:/]# 
+# apt update
+- Then install any application in it. Let’s install Node.js
+# apt install nodejs
+- This installs Node.js in the container from the official Ubuntu repository. When the installation finishes, verify that Node.js is installed
+# node -v
+# exit
+
+
+*** Step 6 — Managing Docker Containers
+
+- After using Docker for a while, you’ll have many active (running) and inactive containers on your computer. To view the active ones, use
+$ docker ps
+
+- To view all containers — active and inactive, run docker ps with the -a switch
+$ docker ps -a
+
+- To view the latest container you created, pass it the -l switch
+$ docker ps -l
+
+- To start a stopped container, use docker start, followed by the container ID or the container’s name. Let’s start the Ubuntu-based container with the ID of 1c08a7a0d0e4
+$ docker start 1c08a7a0d0e4
+$ docker ps
+
+- To stop a running container, use docker stop, followed by the container ID or name. This time, we’ll use the name that Docker assigned the container, which is quizzical_mcnulty
+$ docker stop quizzical_mcnulty
+
+- Once you’ve decided you no longer need a container anymore, remove it with the docker rm command, again using either the container ID or the name. Use the docker ps -a command to find the container ID or name for the container associated with the hello-world image and remove it
+$ docker rm youthful_curie
+
+- You can start a new container and give it a name using the --name switch. You can also use the --rm switch to create a container that removes itself when it’s stopped. See the docker run help command for more information on these options and others
+
+
+*** Step 7 — Committing Changes in a Container to a Docker Image
+
+- This section shows you how to save the state of a container as a new Docker image.After installing Node.js inside the Ubuntu container, you now have a container running off an image, but the container is different from the image you used to create it. But you might want to reuse this Node.js container as the basis for new images later  
+
+- Then commit the changes to a new Docker image instance using the following command
+$ docker commit -m "What you did to the image" -a "Author Name" container_id repository/new_image_name
+The -m switch is for the commit message that helps you and others know what changes you made, while -a is used to specify the author. The container_id is the one you noted earlier in the tutorial when you started the interactive Docker session. Unless you created additional repositories on Docker Hub, the repository is usually your Docker Hub username.
+
+- For example, for the user sammy, with the container ID of d9b100f2f636, the command would be
+$ docker commit -m "added Node.js" -a "sammy" d9b100f2f636 sammy/ubuntu-nodejs
+$ docker images
+
+
+*** Step 8 — Pushing Docker Images to a Docker Repository
+
+- To push your image, first log into Docker Hub
+$ docker login -u docker-registry-username
+You’ll be prompted to authenticate using your Docker Hub password. If you specified the correct password, authentication should succeed.
+
+- Note: If your Docker registry username is different from the local username you used to create the image, you will have to tag your image with your registry username. For the example given in the last step, you would type:
+$ docker tag sammy/ubuntu-nodejs docker-registry-username/ubuntu-nodejs
+
+- Then you may push your own image using
+$ docker push docker-registry-username/docker-image-name
+
+- To push the ubuntu-nodejs image to the sammy repository, the command would be
+$ docker push sammy/ubuntu-nodejs
+After pushing an image to a registry, it should be listed on your account’s dashboard
+
+- If a push attempt results in an error of this sort, then you likely did not log in
+Log in with docker login and repeat the push attempt. Then verify that it exists on your Docker Hub repository page.
+You can now use docker pull sammy/ubuntu-nodejs to pull the image to a new machine and use it to run a new container.      
+
+
+*** *** Step 9 - Uninstalling Docker
+
+- Run the following commands to stop all running containers and remove all docker objects
+$ docker container stop $(docker container ls -aq)
+$ docker system prune -a --volumes
+
+- You can now uninstall Docker as any other package installed with apt
+$ sudo apt purge docker-ce
+$ sudo apt autoremove
+

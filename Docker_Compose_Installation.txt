@@ -1,0 +1,153 @@
+*** How To Install and Use Docker Compose on Ubuntu 20.04
+
+
+*** Prerequisites
+
+- Access to an Ubuntu 20.04 local machine or development server as a non-root user with sudo privileges. 
+- Docker installed on your server or local machine
+
+
+*** Step 1 — Installing Docker Compose
+
+
+- First, confirm the latest version available in their releases page. At the time of this writing, the most current stable version is 1.27.4.The following command will download the 1.27.4 release and save the executable file at /usr/local/bin/docker-compose, which will make this software globally accessible as docker-compose
+$ sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+
+- Next, set the correct permissions so that the docker-compose command is executable
+$ sudo chmod +x /usr/local/bin/docker-compose
+
+- To verify that the installation was successful, you can run
+$ docker-compose --version
+
+
+
+*** Step 2 — Setting Up a docker-compose.yml File
+
+
+- To demonstrate how to set up a docker-compose.yml file and work with Docker Compose, we’ll create a web server environment using the official Nginx image from Docker Hub, the public Docker registry. This containerized environment will serve a single static HTML file.Start off by creating a new directory in your home folder, and then moving into it
+$ mkdir ~/compose-demo
+$ cd ~/compose-demo
+
+- In this directory, set up an application folder to serve as the document root for your Nginx environment
+$ mkdir app
+
+- Using your preferred text editor, create a new index.html file within the app folder
+$ nano app/index.html
+
+- Place the following content into this file
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Docker Compose Demo</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/kognise/water.css@latest/dist/dark.min.css">
+</head>
+<body>
+
+    <h1>This is a Docker Compose Demo Page.</h1>
+    <p>This content is being served by an Nginx container.</p>
+
+</body>
+</html>
+
+- Next, create the docker-compose.yml file
+$ nano docker-compose.yml
+
+- Insert the following content on your docker-compose.yml file
+
+version: '3.7'
+services:
+  web:
+    image: nginx:alpine
+    ports:
+      - "8000:80"
+    volumes:
+      - ./app:/usr/share/nginx/html
+      
+
+*** Step 3 — Running Docker Compose
+
+
+- With the docker-compose.yml file in place, we can now execute Docker Compose to bring our environment up. The following command will download the necessary Docker images, create a container for the web service, and run the containerized environment in background mode
+$ docker-compose up -d
+
+- To verify that the container is active, you can run
+$ docker-compose ps
+
+- You can now access the demo application by pointing your browser to either localhost:8000 if you are running this demo on your local machine, or your_server_domain_or_IP:8000 if you are running this demo on a remote server.
+
+- Because the shared volume you’ve set up within the docker-compose.yml file keeps your app folder files in sync with the container’s document root. If you make any changes to the index.html file, they will be automatically picked up by the container and thus reflected on your browser when you reload the page.In the next step, you’ll see how to manage your containerized environment with Docker Compose commands.      
+
+
+
+*** OR,
+
+*** Step 2 — Setting Up a docker-compose.yml File
+
+
+$ mkdir wordpress
+$ cd wordpress/
+$ sudu gedit docker-compose.yml
+
+- Insert the following content on your docker-compose.yml file
+
+version: "3"
+
+services:
+  wordpress:
+    image: wordpress
+    links:
+      - wordpress_db
+    ports:
+      - "8282:80"
+
+  wordpress_db:
+    image: mariadb
+    environment:
+      - MY_SQL_ROOT_PASSWORD=parvez
+
+  phpmyadmin:
+    image: corbinu/docker-phpmyadmin
+    links:
+      - wordpress_db:mysql
+    ports:
+      - "8181:80"
+    environment:
+      - MY_SQL_USERNAME=root
+      - MY_SQL_ROOT_PASSWORD=parvez   
+
+
+- Running Docker Compose
+$ docker-compose up -d
+
+- To verify that the container is active, you can run
+$ docker-compose ps
+
+- Go to browser search bar > localhost:8282 > site title (parvez) > username (parvez) > password (parvez) > your email > search engine visibility > install wordpress
+
+- Go to new tab > localhost:8181 > username (root) > password (parvez) 
+
+
+*** Step 4 — Getting Familiar with Docker Compose Commands
+
+
+- To check the logs produced by your Nginx container, you can use the logs command
+$ docker-compose logs
+
+- If you want to pause the environment execution without changing the current state of your containers, you can use
+$ docker-compose pause
+
+- To resume execution after issuing a pause
+$ docker-compose unpause
+
+- The stop command will terminate the container execution, but it won’t destroy any data associated with your containers
+$ docker-compose stop
+
+- If you want to remove the containers, networks, and volumes associated with this containerized environment, use the down command
+$ docker-compose down
+
+- In case you want to also remove the base image from your system, you can use
+$ docker image rm nginx:alpine
+
+     
